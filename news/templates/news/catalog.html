@@ -14,7 +14,11 @@
         <nav>
             <ul>  <!-- unmarked list -->
                 {% for item in menu %}
-                    <li>{{ item }}</li>  <!-- list item -->
+                    <li>  <!-- list item -->
+                        <a href="{{ item.url }}">
+                            {{ item.title }}
+                        </a>
+                    </li>
                     {% if not forloop.last %}
                         <hr>  <!-- horizontal rule -->
                     {% endif %}
@@ -34,10 +38,9 @@
   </header>
   <body class="bg-primary-subtle">
     <div class="container mt-1">
-        <h1>Каталог карточек</h1>
+        <h1>Каталог новостей</h1>
         <p>Всего новостей: {{ news_count }}</p>
         <p>Всего пользователей: {{ users_count }}</p>
-        <p>Список {{ menu }}</p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   </body>
