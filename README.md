@@ -188,3 +188,10 @@ info = {
 - Подключили шаблон `article_preview.html` в шаблоне `catalog.html` через `{% include %}`
 
 **commit: `Урок 3: начали работу над каталогом новостей и динамической вставкой данных в шаблон`**
+
+- Добавили шаблон `article_detail.html` в папке `templates/news` 
+- Доделали `article_preview.html` в папке `templates/news`, распарсив в нём поля `title`, `category`, `tags`, `id_author`, `id_article`, `upload_date`, `views_count`, `favorites_count`
+- Те же поля + `content` распарсили в `article_detail.html`
+- Обновили функцию `get_detail_article_by_id` - сделали поиск статьи по `id_article` в словаре и возврат шаблона `article_detail.html` ИЛИ `404`
+
+**commit: `Урок 3: доделали каталог новостей и детальное отображение статьи по id_article`**
