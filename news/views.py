@@ -21,9 +21,9 @@ info = {
 
 def main(request):
     """
-    Представление рендерит шаблон base.html
+    Представление рендерит шаблон main.html
     """
-    return render(request, 'base.html')
+    return render(request, 'main.html')
 
 
 def about(request):
