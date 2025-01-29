@@ -272,3 +272,10 @@ class Article(models.Model):
 `python manage.py loaddata articles.json`
 
 **commit: `Урок 4: Наполнили базу данных тестовыми данными`**
+
+
+#### Установили IPython, чтобы прекратить страдания:
+```shell
+pip install ipython
+```
+**commit: `Урок 4: установка ipython`**
