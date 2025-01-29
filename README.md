@@ -267,3 +267,8 @@ class Article(models.Model):
 (для выхода из консоли `Shell Plus` - `exit()`)
 
 **commit: `Урок 4: установка Shell Plus и подготовка ORM`**
+
+### Загрузка данных в базу данных из JSON файла
+`python manage.py loaddata articles.json`
+
+**commit: `Урок 4: Наполнили базу данных тестовыми данными`**
