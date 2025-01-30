@@ -423,3 +423,40 @@ article.delete()
 ```
 
 **commit: `Урок 5: Посмотрели операции CRUD через командную строку`**
+
+#### Импортировали модели в `news/views.py`
+```python
+from .models import Article
+```
+
+#### Переписали представления для показа каталога новостей и подробного показа новости
+```python
+def get_all_news(request):
+    articles = Article.objects.all()
+    context = {
+        'news': articles,
+        'menu': [
+            {"title": "Главная", "url": "/", "url_name": "index"},
+            {"title": "О проекте", "url": "/about/", "url_name": "about"},
+            {"title": "Каталог", "url": "/news/catalog/", "url_name": "catalog"},
+        ],
+    }
+    return render(request, 'news/catalog.html', context=context)
+
+def get_detail_article_by_id(request, article_id):
+    """
+    Возвращает детальную информацию по новости для представления
+    """
+    article = get_object_or_404(Article, pk=article_id)
+    context = {
+        'article': article,
+        'menu': [
+            {"title": "Главная", "url": "/", "url_name": "index"},
+            {"title": "О проекте", "url": "/about/", "url_name": "about"},
+            {"title": "Каталог", "url": "/news/catalog/", "url_name": "catalog"},
+        ],
+    }
+    return render(request, 'news/article_detail.html', context=context)
+```
+
+**commit: `Урок 5: Подключили модели данных к представлениям`**
