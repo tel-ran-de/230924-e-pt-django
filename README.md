@@ -546,3 +546,66 @@ for article in articles_filtered_and_sorted:
 ```
 
 **commit: `Урок 6: Рассмотрели операции на фильтрацию и сортировку данных, а так же лукапы`**
+
+### Новое поле `slug` в модели данных `Article`
+
+#### Установка `unidecode`
+`pip install unidecode`
+
+#### Сначала нужно очистить БД
+`python manage.py flush`
+
+#### Добавляем `slug` и переопределяем метод сохранения
+```python
+from django.utils.text import slugify
+class Article(models.Model):
+    ...
+    slug = models.SlugField(unique=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.slug:
+            base_slug = slugify(unidecode.unidecode(self.title))
+            self.slug = f"{base_slug}-{self.id}"
+        super().save(*args, **kwargs)
+```
+#### Создаём миграцию
+`python manage.py makemigrations`
+
+#### Применяем миграцию
+`python manage.py migrate`
+
+#### Загружаем новый дамп данных
+`python manage.py loaddata articles_3.json`
+
+#### Проверка работы slugify и unidecode
+```python
+# Создаем категорию, если она еще не существует
+category, created = Category.objects.get_or_create(name="Технологии")
+
+# Создаем теги, если они еще не существуют
+tag1, created = Tag.objects.get_or_create(name="Технологии")
+tag2, created = Tag.objects.get_or_create(name="Инновации")
+
+# Создаем статью
+article = Article(
+    title="Новая статья о технологиях",
+    content="Это тестовая статья для проверки работы поля slug.",
+    category=category,
+)
+
+# Сохраняем статью, чтобы убедиться, что slug был сгенерирован
+article.save()
+
+# Добавляем теги к статье
+article.tags.add(tag1, tag2)
+
+# Выводим информацию о статье, чтобы убедиться, что slug был сгенерирован
+print(f"Title: {article.title}")
+print(f"Slug: {article.slug}")
+print(f"Content: {article.content}")
+print(f"Category: {article.category.name}")
+print(f"Tags: {', '.join([tag.name for tag in article.tags.all()])}")
+```
+
+**commit: `Урок 6: Добавили slug в Article`**
