@@ -756,3 +756,8 @@ for category in category_counts:
     print(f"Category: {category['category__name']}, Count: {category['count']}")
 ```
 **commit: `Урок 7: Агрегация данных`**
+
+- установили отладочную панель `Django` (`pip install django-debug-toolbar`) и настроили её
+- убедились в том, что наше приложение генерирует слишком много запросов
+
+**commit: `Урок 7: Установили отладочную панель Django`**
