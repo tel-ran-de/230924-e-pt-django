@@ -627,3 +627,14 @@ def get_detail_article_by_slag(request, slug):
 ```
 
 **commit: `Урок 6: Добавление slug в маршруты и представления`**
+
+
+## Урок 7
+
+### Очистка базы данных
+`python manage.py flush`
+
+### Загрузка новых данных
+`python manage.py loaddata articles_4.json`
+
+**commit: `Урок 7: Подготовка данных`**
