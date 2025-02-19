@@ -2490,7 +2490,7 @@ for article in articles:
 
 ### Регистрация моделей в админ-панели
 
-#### models.py
+#### admin.py
 ```python
 from .models import Article, Category, Tag
 admin.site.register(Article)
@@ -2502,7 +2502,7 @@ admin.site.register(Tag)
 
 ### Изменение заголовка, подзаголовка и тд в админ-панели
 
-#### models.py
+#### admin.py
 
 ```python
 admin.site.site_header = "Info to Go Admin Portal"
@@ -2514,7 +2514,7 @@ admin.site.index_title = "Welcome to ITG Admin Portal"
 **commit: `Урок 13: изменили заголовки в административной панели`**
 
 ### Настройка полей в отображении статей в админ-панели
-#### models.py
+#### admin.py
 ```python
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'publication_date', 'views')
@@ -2525,7 +2525,7 @@ admin.site.register(Article, ArticleAdmin)
 
 ### Добавление фильтров в админ-панели
 
-#### models.py
+#### admin.py
 
 ```python
 class ArticleAdmin(admin.ModelAdmin):
@@ -2538,7 +2538,7 @@ admin.site.register(Article, ArticleAdmin)
 
 ### Добавление поиска в админ-панели
 
-#### models.py
+#### admin.py
 
 ```python
 class ArticleAdmin(admin.ModelAdmin):
@@ -2587,7 +2587,7 @@ for i in published_articles:
 
 ### Добавление пользовательского поля в админ-панели
 
-#### models.py
+#### admin.py
 ```python
 from django.utils.html import format_html
 class ArticleAdmin(admin.ModelAdmin):
@@ -2614,3 +2614,20 @@ class AllArticleManager(models.Manager):
 ```
 
 **commit: `Урок 13: добавили пользовательское поле в админ-панель`
+
+### Добавление дополнительных действий в админ-панели (сделать неактивными выбранные статьи)
+
+#### admin.py
+```python
+def make_inactive(modeladmin, request, queryset):
+    queryset.update(is_active=False)
+    
+make_inactive.short_description = "Сделать неактивными выбранные статьи
+    
+class ArticleAdmin(admin.ModelAdmin):
+    ...
+    actions = (make_inactive,)
+    ...
+```
+
+**commit: `Урок 13: добавили дополнительные действия в админ-панель`
