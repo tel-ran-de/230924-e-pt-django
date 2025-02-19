@@ -28,6 +28,8 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ('title', 'content')
     # actions позволяет выполнять действия над выбранными записями
     actions = (make_inactive, make_active)
+    # fields позволяет выбирать поля для редактирования
+    fields = ('title', 'category', 'content', 'tags', 'is_active')
 
     def get_queryset(self, request):
         return Article.all_objects.get_queryset()
