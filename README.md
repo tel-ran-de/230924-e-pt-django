@@ -2646,8 +2646,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
 ### Добавление группировки в админ-панели
 
-#### models.py
-
+#### admin.py
 ```python
 class ArticleAdmin(admin.ModelAdmin):   
     ...
@@ -2658,3 +2657,18 @@ class ArticleAdmin(admin.ModelAdmin):
     ...
 ```
 **commit: `Урок 13: добавили группировку в админ-панель`**
+
+### Добавление гибкого редактирования тегов в админ-панели
+
+#### admin.py
+```python
+class TagInline(admin.TabularInline):
+    model = Tag.article.through
+    extra = 1
+class ArticleAdmin(admin.ModelAdmin):
+    ...
+    inlines = [TagInline]
+    ...
+```
+
+**commit: `Урок 13: добавили гибкое редактирование тегов в админ-панели`**

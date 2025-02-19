@@ -19,6 +19,11 @@ make_inactive.short_description = 'Сделать неактивными выб�
 make_active.short_description = 'Сделать активными выбранные статьи'
 
 
+class TagInline(admin.TabularInline):
+    model = Article.tags.through
+    extra = 1
+
+
 class ArticleAdmin(admin.ModelAdmin):
     # list_display отображает поля в таблице
     list_display = ('title', 'category', 'publication_date', 'views', 'colored_status')
@@ -36,6 +41,9 @@ class ArticleAdmin(admin.ModelAdmin):
         ('Главная информация', {'fields': ('title', 'content')}),
         ('Дополнительные параметры', {'fields': ('category', 'tags', 'is_active')}),
     )
+
+    # inlines позволяет добавлять дополнительные поля
+    inlines = [TagInline]
 
     def get_queryset(self, request):
         return Article.all_objects.get_queryset()
