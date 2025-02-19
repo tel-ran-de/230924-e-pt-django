@@ -2643,3 +2643,18 @@ class ArticleAdmin(admin.ModelAdmin):
 ```
 
 **commit: `Урок 13: настроили отображение полей в админ-панели`
+
+### Добавление группировки в админ-панели
+
+#### models.py
+
+```python
+class ArticleAdmin(admin.ModelAdmin):   
+    ...
+    fieldsets = (
+        ('Главная информация', {'fields': ('title', 'content')}),
+        ('Дополнительные параметры', {'fields': ('category', 'tags', 'is_active')}),
+    )
+    ...
+```
+**commit: `Урок 13: добавили группировку в админ-панель`**
