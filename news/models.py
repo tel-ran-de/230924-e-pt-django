@@ -4,6 +4,11 @@ from django.db import models
 from django.utils.text import slugify
 
 
+class AllArticleManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset()
+
+
 class ArticleManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_active=True)
@@ -36,6 +41,7 @@ class Article(models.Model):
     is_active = models.BooleanField(default=True)
 
     objects = ArticleManager()
+    all_objects = AllArticleManager()
 
     def save(self, *args, **kwargs):
         # Сохраняем статью, чтобы получить id
