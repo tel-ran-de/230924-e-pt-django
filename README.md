@@ -2699,3 +2699,15 @@ class ArticleAdmin(admin.ModelAdmin):
 ```
 
 **commit: `Урок 14: добавили ссылки по другим полям в админ-панель`**
+
+### Добавление сортировок по полям
+
+#### admin.py
+```python
+class ArticleAdmin(admin.ModelAdmin):
+    ...
+    ordering = ('-views', 'title')
+    ...
+```
+
+**commit: `Урок 14: добавили сортировки по полям в админ-панели`**

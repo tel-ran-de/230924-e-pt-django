@@ -31,6 +31,8 @@ class ArticleAdmin(admin.ModelAdmin):
     list_display_links = ('pk', 'title')
     # list_filter позволяет фильтровать по полям
     list_filter = ('category',)
+    # сортировка, возможна по нескольким полям, по возрастанию или по убыванию
+    ordering = ('category', '-is_active')
     # search_fields позволяет искать по полям
     search_fields = ('title', 'content')
     # actions позволяет выполнять действия над выбранными записями
