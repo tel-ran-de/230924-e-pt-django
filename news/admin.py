@@ -33,6 +33,7 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ('title', 'content')
     # actions позволяет выполнять действия над выбранными записями
     actions = (make_inactive, make_active)
+    list_per_page = 20
     # fields позволяет выбирать поля для редактирования (не fieldsets)
     # fields = ('title', 'category', 'content', 'tags', 'is_active')
 

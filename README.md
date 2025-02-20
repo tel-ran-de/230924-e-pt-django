@@ -2672,3 +2672,18 @@ class ArticleAdmin(admin.ModelAdmin):
 ```
 
 **commit: `Урок 13: добавили гибкое редактирование тегов в админ-панели`**
+
+
+## Урок 14
+
+### Добавление пагинации в админ-панель
+
+#### admin.py
+```python
+class ArticleAdmin(admin.ModelAdmin):
+    ...
+    list_per_page = 20
+    ...
+```
+
+**commit: `Урок 14: добавили пагинацию в админ-панель`**
