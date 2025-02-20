@@ -4,9 +4,9 @@ from django.utils.html import format_html
 from .models import Article, Category, Tag
 
 
-admin.site.site_header = "My Blog Admin"
-admin.site.site_title = "My Blog Admin Portal"
-admin.site.index_title = "Welcome to My Blog Admin Portal"
+admin.site.site_header = "Админка Info to Go"
+admin.site.site_title = "Админка"
+admin.site.index_title = "Привет админ! Не сломай ничего."
 
 
 def make_inactive(modeladmin, request, queryset):
