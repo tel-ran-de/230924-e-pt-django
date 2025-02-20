@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.contrib.admin import SimpleListFilter
 
 from .models import Article, Category, Tag
 
@@ -9,6 +10,24 @@ admin.site.site_title = "Админка"
 admin.site.index_title = "Привет админ! Не сломай ничего."
 
 
+class ArticleSpiderFilter(SimpleListFilter):
+    title = 'Внутри пауки'
+    parameter_name = 'has_spiders'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Есть'),
+            ('no', 'Нет')
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(content__contains='пауки')
+        if self.value() == 'no':
+            return queryset.exclude(content__contains='пауки')
+        return queryset
+
+
 class TagInline(admin.TabularInline):
     model = Article.tags.through
     extra = 1
@@ -16,11 +35,11 @@ class TagInline(admin.TabularInline):
 
 class ArticleAdmin(admin.ModelAdmin):
     # list_display отображает поля в таблице
-    list_display = ('pk', 'title', 'category', 'publication_date', 'views', 'has_spiders')
+    list_display = ('pk', 'title', 'category', 'publication_date', 'views', 'status', 'is_active', 'has_spiders')
     # list_display_links позволяет указать в качестве ссылок на объект другие поля
     list_display_links = ('pk', 'title')
     # list_filter позволяет фильтровать по полям
-    list_filter = ('category',)
+    list_filter = ('category', 'is_active', 'status', ArticleSpiderFilter)
     # сортировка, возможна по нескольким полям, по возрастанию или по убыванию
     ordering = ('category', '-is_active')
     # search_fields позволяет искать по полям
@@ -42,11 +61,6 @@ class ArticleAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return Article.all_objects.get_queryset()
-
-    def colored_status(self, obj):
-        return format_html('<span style="color: {};">{}</span>', 'green' if obj.is_active else 'red', obj.is_active)
-
-    colored_status.short_description = 'Статус'
 
     @admin.display(description='Пауки внутри')
     def has_spiders(self, article):
