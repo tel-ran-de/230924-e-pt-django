@@ -38,7 +38,7 @@ class ArticleAdmin(admin.ModelAdmin):
     # list_display отображает поля в таблице
     list_display = ('pk', 'title', 'category', 'publication_date', 'views', 'status', 'is_active', 'has_spiders')
     # list_display_links позволяет указать в качестве ссылок на объект другие поля
-    list_display_links = ('pk', 'title')
+    list_display_links = ('pk',)
     # list_filter позволяет фильтровать по полям
     list_filter = ('category', 'is_active', 'status', ArticleSpiderFilter)
     # сортировка, возможна по нескольким полям, по возрастанию или по убыванию
@@ -50,6 +50,8 @@ class ArticleAdmin(admin.ModelAdmin):
     list_per_page = 20
     # включение иерархического отображения по дате
     date_hierarchy = 'publication_date'
+    # перенос кнопоу сохранения в верхнюю часть формы
+    save_on_top = True
     # fields позволяет выбирать поля для редактирования (не fieldsets)
     # fields = ('title', 'category', 'content', 'tags', 'is_active')
 

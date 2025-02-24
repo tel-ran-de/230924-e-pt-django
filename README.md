@@ -2873,3 +2873,14 @@ class ArticleAdmin(admin.ModelAdmin):
 ```
 
 **commit: `Урок 15: пометили часть полей как неизменяемые`**
+
+### Перенос кнопок сохранения в верхнюю часть формы редактирования
+
+#### admin.py
+```python
+class ArticleAdmin(admin.ModelAdmin):
+    ...
+    save_on_top = True
+```
+
+**commit: `Урок 15: перенесли кнопки сохранения в верхнюю часть формы`**
