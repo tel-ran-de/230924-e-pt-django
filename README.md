@@ -2848,3 +2848,17 @@ class ArticleAdmin(admin.ModelAdmin):
 ```
 
 **commit: `Урок 14: посмотрели другой способ регистрации модели`**
+
+
+## Урок 15
+
+### Добавление вывода объектов по датам
+
+#### admin.py
+```python
+class ArticleAdmin(admin.ModelAdmin):
+    ...
+    date_hierarchy = 'publication_date'
+```
+
+**commit: `Урок 15: добавили иерархическое отображение по дате публикации`**
