@@ -56,11 +56,14 @@ class ArticleAdmin(admin.ModelAdmin):
     # fieldsets позволяет выбирать группы полей (не работает с fields)
     fieldsets = (
         ('Главная информация', {'fields': ('title', 'content')}),
-        ('Дополнительные параметры', {'fields': ('category', 'tags', 'is_active')}),
+        ('Настройки фильтрации', {'fields': ('category', 'is_active', 'status')}),
+        ('Доп. инфо', {'fields': ('views', 'slug')}),
     )
 
     # inlines позволяет добавлять дополнительные поля
     inlines = [TagInline]
+
+    readonly_fields = ('views', 'slug')
 
     def get_queryset(self, request):
         return Article.all_objects.get_queryset()
