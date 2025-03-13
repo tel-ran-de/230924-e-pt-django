@@ -75,7 +75,7 @@ def upload_json(request):
                 for tag_name in tags_names:
                     tag, created = Tag.objects.get_or_create(name=tag_name)
                     article.tags.add(tag)
-                return redirect('news:catalog')
+            return redirect('news:catalog')
         except json.JSONDecoderError:
             return render(request, 'news/add_article.html', {'error': 'Неверный формат JSON-файла'})
     return render(request, 'news/add_article.html')
