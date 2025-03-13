@@ -1,3 +1,5 @@
+import json
+
 from django.core.paginator import Paginator
 from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseRedirect
@@ -5,6 +7,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ArticleForm
 from .models import Article, Favorite, Category, Like, Tag
+
+import unidecode
+from django.db import models
+from django.utils.text import slugify
 
 
 """
@@ -28,11 +34,51 @@ info = {
         {"title": "Каталог",
          "url": "/news/catalog/",
          "url_name": "news:catalog"},
+        {"title": "Добавить статью",
+         "url": "/news/add/",
+         "url_name": "news:add_article"},
         {"title": "Избранное",
          "url": "/news/favorites/",
          "url_name": "news:favorites"},
     ],
 }
+
+
+def upload_json(request):
+    if request.method == 'POST' and request.FILES['json_file']:
+        json_file = request.FILES['json_file']
+        try:
+            data = json.load(json_file)
+            for item in data:
+                fields = item['fields']
+                title = fields['title']
+                content = fields['content']
+                category_name = fields['category']
+                tags_names = fields['tags']
+                category, created = Category.objects.get_or_create(name=category_name)
+                # генерируем slug до создания статьи
+                base_slug = slugify(unidecode.unidecode(title))
+                unique_slug = base_slug
+                num = 1
+                while Article.objects.filter(slug=unique_slug).exists():
+                    unique_slug = f"{base_slug}-{num}"
+                    num += 1
+                # создаём новую статью с уникальным slug
+                article = Article(
+                    title=title,
+                    content=content,
+                    category=category,
+                    slug=unique_slug
+                )
+                article.save()
+                # добавляем теги к статье
+                for tag_name in tags_names:
+                    tag, created = Tag.objects.get_or_create(name=tag_name)
+                    article.tags.add(tag)
+                return redirect('news:catalog')
+        except json.JSONDecoderError:
+            return render(request, 'news/add_article.html', {'error': 'Неверный формат JSON-файла'})
+    return render(request, 'news/add_article.html')
 
 
 def favorites(request):
