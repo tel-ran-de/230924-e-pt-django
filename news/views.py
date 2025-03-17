@@ -5,6 +5,7 @@ from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
+from django.views.generic import ListView
 
 from .forms import ArticleForm, ArticleUploadForm
 from .models import Article, Favorite, Category, Like, Tag
@@ -241,12 +242,16 @@ def get_news_by_category(request, category_id):
     return render(request, 'news/catalog.html', context=context)
 
 
-class GetAllNewsViews(View):
+class GetAllNewsViews(ListView):
+    model = Article
+    template_name = 'news/catalog.html'
+    context_object_name = 'news'
+    paginate_by = 10
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
         # считаем параметры из GET-запроса
-        sort = request.GET.get('sort', 'publication_date')  # по умолчанию сортируем по дате загрузки
-        order = request.GET.get('order', 'desc')  # по умолчанию сортируем по убыванию
+        sort = self.request.GET.get('sort', 'publication_date')  # по умолчанию сортируем по дате загрузки
+        order = self.request.GET.get('order', 'desc')  # по умолчанию сортируем по убыванию
 
         # Проверяем дали ли мы разрешение на сортировку по этому полю
         valid_sort_fields = {'publication_date', 'views'}
@@ -254,19 +259,15 @@ class GetAllNewsViews(View):
             sort = 'publication_date'
 
         # Обрабатываем направление сортировки
-        if order == 'asc':
-            order_by = sort
-        else:
-            order_by = f'-{sort}'
+        order_by = f'-{sort}' if order == 'desc' else sort
 
-        articles = Article.objects.select_related('category').prefetch_related('tags').order_by(order_by)
+        return Article.objects.select_related('category').prefetch_related('tags').order_by(order_by)
 
-        paginator = Paginator(articles, 10)  # Показывать 10 новостей на странице
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        context = {**info, 'news': articles, 'news_count': len(articles), 'page_obj': page_obj, 'user_ip': request.META.get('REMOTE_ADDR'),}
-
-        return render(request, 'news/catalog.html', context=context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(info)
+        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
+        return context
 
 
 def get_detail_article_by_title(request, title):
