@@ -6,6 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic import ListView
+from django.views.generic.detail import DetailView
 
 from .forms import ArticleForm, ArticleUploadForm
 from .models import Article, Favorite, Category, Like, Tag
@@ -142,23 +143,29 @@ def favorites(request):
     return render(request, 'news/catalog.html', context=context)
 
 
-def get_detail_article_by_id(request, article_id):
-    """
-    Возвращает детальную информацию по новости для представления
-    """
-    article = get_object_or_404(Article, id=article_id)
+class ArticleDetailView(DetailView):
+    model = Article
+    template_name = 'news/article_detail.html'
+    context_object_name = 'article'
 
-    # Увеличиваем счетчик просмотров только один раз за сессию для каждой новости
-    viewed_articles = request.session.get('viewed_articles', [])
-    if article_id not in viewed_articles:
-        article.views += 1
-        article.save()
-        viewed_articles.append(article_id)
-        request.session['viewed_articles'] = viewed_articles
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        article = self.get_object()
 
-    context = {**info, 'article': article}
+        viewed_articles = request.session.get('viewed_articles', [])
+        if article.id not in viewed_articles:
+            article.views += 1
+            article.save()
+            viewed_articles.append(article.id)
+            request.session['viewed_articles'] = viewed_articles
 
-    return render(request, 'news/article_detail.html', context=context)
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(info)
+        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
+        return context
 
 
 def toggle_favorite(request, article_id):
