@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 
 from .forms import ArticleForm, ArticleUploadForm
 from .models import Article, Favorite, Category, Like, Tag
@@ -140,6 +141,25 @@ def favorites(request):
     return render(request, 'news/catalog.html', context=context)
 
 
+def get_detail_article_by_id(request, article_id):
+    """
+    Возвращает детальную информацию по новости для представления
+    """
+    article = get_object_or_404(Article, id=article_id)
+
+    # Увеличиваем счетчик просмотров только один раз за сессию для каждой новости
+    viewed_articles = request.session.get('viewed_articles', [])
+    if article_id not in viewed_articles:
+        article.views += 1
+        article.save()
+        viewed_articles.append(article_id)
+        request.session['viewed_articles'] = viewed_articles
+
+    context = {**info, 'article': article}
+
+    return render(request, 'news/article_detail.html', context=context)
+
+
 def toggle_favorite(request, article_id):
     article = get_object_or_404(Article, pk=article_id)
     ip_address = request.META.get('REMOTE_ADDR')
@@ -221,59 +241,32 @@ def get_news_by_category(request, category_id):
     return render(request, 'news/catalog.html', context=context)
 
 
-def get_all_news(request):
-    """Функция для отображения страницы "Каталог"
-    будет возвращать рендер шаблона /templates/news/catalog.html
-    - **`sort`** - ключ для указания типа сортировки с возможными значениями: `publication_date`, `views`.
-    - **`order`** - опциональный ключ для указания направления сортировки с возможными значениями: `asc`, `desc`. По умолчанию `desc`.
-    1. Сортировка по дате добавления в убывающем порядке (по умолчанию): `/news/catalog/`
-    2. Сортировка по количеству просмотров в убывающем порядке: `/news/catalog/?sort=views`
-    3. Сортировка по количеству просмотров в возрастающем порядке: `/news/catalog/?sort=views&order=asc`
-    4. Сортировка по дате добавления в возрастающем порядке: `/news/catalog/?sort=publication_date&order=asc`
-    """
+class GetAllNewsViews(View):
 
-    # считаем параметры из GET-запроса
-    sort = request.GET.get('sort', 'publication_date')  # по умолчанию сортируем по дате загрузки
-    order = request.GET.get('order', 'desc')  # по умолчанию сортируем по убыванию
+    def get(self, request, *args, **kwargs):
+        # считаем параметры из GET-запроса
+        sort = request.GET.get('sort', 'publication_date')  # по умолчанию сортируем по дате загрузки
+        order = request.GET.get('order', 'desc')  # по умолчанию сортируем по убыванию
 
-    # Проверяем дали ли мы разрешение на сортировку по этому полю
-    valid_sort_fields = {'publication_date', 'views'}
-    if sort not in valid_sort_fields:
-        sort = 'publication_date'
+        # Проверяем дали ли мы разрешение на сортировку по этому полю
+        valid_sort_fields = {'publication_date', 'views'}
+        if sort not in valid_sort_fields:
+            sort = 'publication_date'
 
-    # Обрабатываем направление сортировки
-    if order == 'asc':
-        order_by = sort
-    else:
-        order_by = f'-{sort}'
+        # Обрабатываем направление сортировки
+        if order == 'asc':
+            order_by = sort
+        else:
+            order_by = f'-{sort}'
 
-    articles = Article.objects.select_related('category').prefetch_related('tags').order_by(order_by)
+        articles = Article.objects.select_related('category').prefetch_related('tags').order_by(order_by)
 
-    paginator = Paginator(articles, 10)  # Показывать 10 новостей на странице
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    context = {**info, 'news': articles, 'news_count': len(articles), 'page_obj': page_obj, 'user_ip': request.META.get('REMOTE_ADDR'),}
+        paginator = Paginator(articles, 10)  # Показывать 10 новостей на странице
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        context = {**info, 'news': articles, 'news_count': len(articles), 'page_obj': page_obj, 'user_ip': request.META.get('REMOTE_ADDR'),}
 
-    return render(request, 'news/catalog.html', context=context)
-
-
-def get_detail_article_by_id(request, article_id):
-    """
-    Возвращает детальную информацию по новости для представления
-    """
-    article = get_object_or_404(Article, id=article_id)
-
-    # Увеличиваем счетчик просмотров только один раз за сессию для каждой новости
-    viewed_articles = request.session.get('viewed_articles', [])
-    if article_id not in viewed_articles:
-        article.views += 1
-        article.save()
-        viewed_articles.append(article_id)
-        request.session['viewed_articles'] = viewed_articles
-
-    context = {**info, 'article': article}
-
-    return render(request, 'news/article_detail.html', context=context)
+        return render(request, 'news/catalog.html', context=context)
 
 
 def get_detail_article_by_title(request, title):
