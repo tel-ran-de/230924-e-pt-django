@@ -4,8 +4,9 @@ from django.core.paginator import Paginator
 from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
@@ -320,6 +321,7 @@ def get_detail_article_by_title(request, title):
 
     return render(request, 'news/article_detail.html', context=context)
 
+
 class AddArtilceView(CreateView):
     model = Article
     form_class = ArticleForm
@@ -343,18 +345,14 @@ class AddArtilceView(CreateView):
         return unique_slug
 
 
-def article_update(request, article_id):
-    article = get_object_or_404(Article, pk=article_id)
+class ArticleUpdateView(UpdateView):
+    model = Article
+    form_class = ArticleForm
+    template_name = 'news/edit_article.html'
+    context_object_name = 'article'
 
-    if request.method == "POST":
-        form = ArticleForm(request.POST, request.FILES, instance=article)
-        if form.is_valid():
-            form.save()
-            return redirect('news:detail_article_by_id', article_id=article.id)
-    else:
-        form = ArticleForm(instance=article)
-    context = {'form': form, 'menu': info['menu'], 'article': article}
-    return render(request, 'news/edit_article.html', context=context)
+    def get_success_url(self):
+        return reverse_lazy('news:detail_article_by_id', kwargs={'pk': self.object.pk})
 
 
 def article_delete(request, article_id):
