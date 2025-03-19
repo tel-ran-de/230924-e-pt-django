@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
@@ -355,12 +355,8 @@ class ArticleUpdateView(UpdateView):
         return reverse_lazy('news:detail_article_by_id', kwargs={'pk': self.object.pk})
 
 
-def article_delete(request, article_id):
-    article = get_object_or_404(Article, pk=article_id)
-
-    if request.method == "POST":
-        article.delete()
-        return redirect('news:catalog')
-
-    context = {'menu': info['menu'], 'article': article}
-    return render(request, 'news/delete_article.html', context=context)
+class ArticleDeleteView(DeleteView):
+    model = Article
+    template_name = 'news/delete_article.html'
+    context_object_name = 'article'
+    success_url = reverse_lazy('news:catalog')
