@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -26,7 +27,7 @@ class BaseMixin(ContextMixin):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "users_count": 5,
+                "users_count": get_user_model().objects.count(),
                 "news_count": len(Article.objects.all()),
                 "categories": Category.objects.all(),
                 "menu": [
@@ -293,10 +294,12 @@ class GetAllNewsViews(BaseMixin, ListView):
         return context
 
 
-class AddArtilceView(BaseMixin, CreateView):
+class AddArtilceView(LoginRequiredMixin, BaseMixin, CreateView):
     model = Article
     form_class = ArticleForm
     template_name = 'news/add_article.html'
+    login_url = reverse_lazy('users:login')  # URL для перенаправления при неавторизованном пользователе на страницу аутентификации
+    redirect_field_name = 'next'  # Имя параметра URL, используемого для перенаправления после успешного входа в систему
 
     def form_valid(self, form):
         article = form.save(commit=False)
