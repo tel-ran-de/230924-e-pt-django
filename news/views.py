@@ -51,6 +51,52 @@ class BaseMixin(ContextMixin):
         return context
 
 
+class BaseArticleListView(BaseMixin, ListView):
+    model = Article
+    template_name = 'news/catalog.html'
+    context_object_name = 'news'
+    paginate_by = 20
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
+        return context
+
+
+class FavoritesView(BaseArticleListView):
+    def get_queryset(self):
+        ip_address = self.request.META.get('REMOTE_ADDR')
+        return Article.objects.filter(favorites__ip_address=ip_address)
+
+
+class SearchNewsView(BaseArticleListView):
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        return Article.objects.filter(Q(title__icontains=query) | Q(content__icontains=query)) if query else Article.objects.all()
+
+
+class GetNewsByCategoryView(BaseArticleListView):
+    def get_queryset(self):
+        category = get_object_or_404(Category, pk=self.kwargs['category_id'])
+        return Article.objects.filter(category=category)
+
+
+class GetNewsByTagView(BaseArticleListView):
+    def get_queryset(self):
+        tag = get_object_or_404(Tag, pk=self.kwargs['tag_id'])
+        return Article.objects.filter(tags=tag)
+
+
+class GetAllNewsView(BaseArticleListView):
+    def get_queryset(self):
+        sort = self.request.GET.get('sort', 'publication_date')
+        order = self.request.GET.get('order', 'desc')
+        valid_sort_fields = {'publication_date', 'views'}
+        sort = sort if sort in valid_sort_fields else 'publication_date'
+        order_by = f'-{sort}' if order == 'desc' else sort
+        return Article.objects.select_related('category').prefetch_related('tags').order_by(order_by)
+
+
 class UploadJsonView(BaseMixin, FormView):
     template_name = 'news/upload_json.html'
     form_class = ArticleUploadForm
@@ -152,22 +198,6 @@ def save_article(article_data, form=None):
     return article
 
 
-class FavoritesView(BaseMixin, ListView):
-    model = Article
-    template_name = 'news/catalog.html'
-    context_object_name = 'news'
-    paginate_by = 20
-
-    def get_queryset(self):
-        ip_address = self.request.META.get('REMOTE_ADDR')
-        return Article.objects.filter(favorites__ip_address=ip_address)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
-        return context
-
-
 class ArticleDetailView(BaseMixin, DetailView):
     model = Article
     template_name = 'news/article_detail.html'
@@ -212,24 +242,6 @@ class ToggleLikeView(View):
         return redirect('news:detail_article_by_id', pk=article_id)
 
 
-class SearchNewsView(BaseMixin, ListView):
-    model = Article
-    template_name = 'news/catalog.html'
-    context_object_name = 'news'
-    paginate_by = 20
-
-    def get_queryset(self):
-        query = self.request.GET.get('q')
-        if query:
-            return Article.objects.filter(Q(title__icontains=query) | Q(content__icontains=query))
-        return Article.objects.all()
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
-        return context
-
-
 class MainView(BaseMixin, TemplateView):
     template_name = 'main.html'
 
@@ -241,40 +253,6 @@ class MainView(BaseMixin, TemplateView):
 
 class AboutView(BaseMixin, TemplateView):
     template_name = 'about.html'
-
-
-class GetNewsByTagView(BaseMixin, ListView):
-    model = Article
-    template_name = 'news/catalog.html'
-    context_object_name = 'news'
-    paginate_by = 20
-
-    def get_queryset(self):
-        tag_id = self.kwargs['tag_id']
-        tag = get_object_or_404(Tag, pk=tag_id)
-        return Article.objects.filter(tags=tag)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
-        return context
-
-
-class GetNewsByCategoryView(BaseMixin, ListView):
-    model = Article
-    template_name = 'news/catalog.html'
-    context_object_name = 'news'
-    paginate_by = 20
-
-    def get_queryset(self):
-        category_id = self.kwargs['category_id']
-        category = get_object_or_404(Category, pk=category_id)
-        return Article.objects.filter(category=category)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
-        return context
 
 
 class GetAllNewsViews(BaseMixin, ListView):
