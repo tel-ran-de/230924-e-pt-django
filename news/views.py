@@ -299,11 +299,14 @@ class AddArtilceView(LoginRequiredMixin, BaseMixin, CreateView):
     form_class = ArticleForm
     template_name = 'news/add_article.html'
     redirect_field_name = 'next'  # Имя параметра URL, используемого для перенаправления после успешного входа в систему
+    success_url = reverse_lazy('news:catalog')
 
     def form_valid(self, form):
         article = form.save(commit=False)
         article.slug = self.generate_unique_slug(form.cleaned_data['title'])
         article.save()
+        form.instance.author = self.request.user  # записываем текущего пользователя в качестве автора карточки перед сохранением
+        super().form_valid(form)  # вызываем базовый метод для сохранения формы
         form.save_m2m()
 
         return redirect('news:detail_article_by_id', pk=article.id)
@@ -324,6 +327,7 @@ class ArticleUpdateView(LoginRequiredMixin, BaseMixin, UpdateView):
     template_name = 'news/edit_article.html'
     context_object_name = 'article'
     redirect_field_name = 'next'  # Имя параметра URL, используемого для перенаправления после успешного входа в систему
+    success_url = reverse_lazy('news:catalog')
 
     def get_success_url(self):
         return reverse_lazy('news:detail_article_by_id', kwargs={'pk': self.object.pk})
