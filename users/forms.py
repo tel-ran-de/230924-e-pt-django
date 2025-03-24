@@ -5,7 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
-        label='Имя пользователя',
+        label='Имя пользователя | Почта',
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     password = forms.CharField(
