@@ -247,7 +247,7 @@ JAZZMIN_UI_TWEAKS = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-LOGIN_URL = 'users:login'
+LOGIN_URL = '/accounts/login/'
 
 
 # AUTHENTICATION_BACKENDS = [
@@ -269,6 +269,8 @@ ACCOUNT_EMAIL_CONFIRMATION_HMAC = True  # Использовать HMAC для �
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = "/"
 # ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = "/accounts/login/"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Автовход после подтверждения
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
