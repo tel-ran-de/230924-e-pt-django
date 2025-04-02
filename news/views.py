@@ -302,14 +302,11 @@ class AddArtilceView(LoginRequiredMixin, BaseMixin, CreateView):
     success_url = reverse_lazy('news:catalog')
 
     def form_valid(self, form):
-        article = form.save(commit=False)
-        article.slug = self.generate_unique_slug(form.cleaned_data['title'])
-        article.save()
-        form.instance.author = self.request.user  # записываем текущего пользователя в качестве автора карточки перед сохранением
-        super().form_valid(form)  # вызываем базовый метод для сохранения формы
-        form.save_m2m()
-
-        return redirect('news:detail_article_by_id', pk=article.id)
+        form.instance.author = self.request.user
+        # Если пользователь не модератор и не админ, устанавливаем статус "не проверено"
+        if not (self.request.user.is_superuser or self.request.user.groups.filter(name="Moderator").exists()):
+            form.instance.status = 0  # или False, в зависимости от типа поля
+        return super().form_valid(form)
 
     def generate_unique_slug(self, title):
         base_slug = slugify(unidecode.unidecode(title))
@@ -329,6 +326,14 @@ class ArticleUpdateView(LoginRequiredMixin, BaseMixin, UpdateView):
     redirect_field_name = 'next'  # Имя параметра URL, используемого для перенаправления после успешного входа в систему
     success_url = reverse_lazy('news:catalog')
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Если пользователь - администратор или модератор, разрешаем редактировать любые статьи
+        if self.request.user.is_superuser or self.request.user.groups.filter(name="Moderator").exists():
+            return qs
+        # Иначе разрешаем редактировать только статьи, автором которых является пользователь
+        return qs.filter(author=self.request.user)
+
     def get_success_url(self):
         return reverse_lazy('news:detail_article_by_id', kwargs={'pk': self.object.pk})
 
@@ -339,3 +344,9 @@ class ArticleDeleteView(LoginRequiredMixin, BaseMixin, DeleteView):
     context_object_name = 'article'
     success_url = reverse_lazy('news:catalog')
     redirect_field_name = 'next'  # Имя параметра URL, используемого для перенаправления после успешного входа в систему
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_superuser or self.request.user.groups.filter(name="Moderator").exists():
+            return qs
+        return qs.filter(author=self.request.user)
