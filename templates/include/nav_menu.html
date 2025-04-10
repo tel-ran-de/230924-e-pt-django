@@ -9,7 +9,7 @@
     {% endfor %}
     {% if user.is_authenticated %}
         <li class="nav-item">
-          <a class="nav-link" href="#">Привет, {{ user.username }}!</a>
+          <a class="nav-link" href="{% url 'users:profile' %}">Привет, {{ user.username }}!</a>
         </li>
         <li class="nav-item">
           <form method="post" action="{% url 'account_logout' %}">
