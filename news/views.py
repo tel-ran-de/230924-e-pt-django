@@ -13,7 +13,7 @@ from django.views.generic import CreateView, DeleteView, ListView, TemplateView,
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
-from .forms import ArticleForm, ArticleUploadForm
+from .forms import ArticleForm, ArticleUploadForm, CommentForm
 from .models import Article, ArticleHistory, ArticleHistoryDetail, Category, Favorite, Like, Tag
 
 import unidecode
@@ -234,23 +234,29 @@ class ArticleDetailView(BaseMixin, DetailView):
     template_name = 'news/article_detail.html'
     context_object_name = 'article'
 
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-        article = self.get_object()
-
-        viewed_articles = request.session.get('viewed_articles', [])
-        if article.id not in viewed_articles:
-            article.views += 1
-            article.save()
-            viewed_articles.append(article.id)
-            request.session['viewed_articles'] = viewed_articles
-
-        return response
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
+        context['comment_form'] = CommentForm()
+        # Получаем все комментарии для данной статьи
+        context['comments'] = self.object.comments.all()
         return context
+
+    def post(self, request, *args, **kwargs):
+        # Если пользователь не аутентифицирован – перенаправляем на страницу входа
+        if not request.user.is_authenticated:
+            return redirect('account_login')
+        self.object = self.get_object()
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.article = self.object
+            comment.user = request.user
+            comment.save()
+            # После сохранения перенаправляем на ту же страницу
+            return redirect(self.object.get_absolute_url())
+        # Если форма не валидна – выводим страницу с ошибками
+        context = self.get_context_data(comment_form=comment_form)
+        return self.render_to_response(context)
 
 
 class MainView(BaseMixin, TemplateView):
