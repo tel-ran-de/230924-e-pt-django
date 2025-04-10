@@ -3,6 +3,32 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
+from .models import Profile
+
+
+User = get_user_model()
+
+
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['avatar']
+        widgets = {
+            'avatar': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
 
 class CustomSignupForm(SignupForm):
     first_name = forms.CharField(
@@ -36,10 +62,10 @@ class CustomSignupForm(SignupForm):
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
-        label='Имя пользователя | Почта',
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        label='Имя пользователя или почта',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
     )
     password = forms.CharField(
         label='Пароль',
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
     )

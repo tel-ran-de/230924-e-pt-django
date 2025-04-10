@@ -4423,3 +4423,32 @@ python manage.py migrate
    - `/users/profile/articles/` и `/users/profile/activity/` также доступны.
 
 **commit: `Урок 31: добавили профиль пользователя: страницы, модель и сигналы`**
+
+
+## Урок 32
+
+1. **Добавлены формы для обновления профиля**
+   - `UserUpdateForm`: позволяет редактировать имя, фамилию, username и email.
+   - `ProfileUpdateForm`: редактирование аватара.
+
+2. **Добавлено редактирование профиля**
+   - В `ProfileUpdateView` теперь поддерживается `POST`-запрос для сохранения изменений.
+   - При успешном редактировании происходит редирект на `/users/profile/`.
+
+3. **Обновлена страница профиля**
+   - Поля формы теперь заполняются из `UserUpdateForm` и `ProfileUpdateForm`.
+   - Добавлена возможность загрузки аватара.
+
+4. **Обновлены маршруты**
+   - Теперь `ProfileUpdateView` заменяет `ProfileInfoView`.
+
+5. **Если база уже содержит запись с username='', её придётся поправить**
+```sh
+python manage.py shell
+from django.contrib.auth import get_user_model
+User = get_user_model()
+bad_users = User.objects.filter(username='')
+bad_users.delete()           # или присвойте им уникальные username
+```
+
+**commit: `Урок 32: добавили возможность редактирования профиля пользователя`**
