@@ -14,7 +14,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
 
 from .forms import ArticleForm, ArticleUploadForm, CommentForm
-from .models import Article, ArticleHistory, ArticleHistoryDetail, Category, Favorite, Like, Tag
+from .models import Article, ArticleHistory, ArticleHistoryDetail, Category, Favorite, Like, Tag, UserSubscription, TagSubscription
 
 import unidecode
 from django.db import models
@@ -87,6 +87,19 @@ class GetNewsByCategoryView(BaseArticleListView):
 class GetNewsByTagView(BaseArticleListView):
     def get_queryset(self):
         return Article.objects.by_tag(self.kwargs['tag_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tag = get_object_or_404(Tag, pk=self.kwargs["tag_id"])
+        context["active_tag"] = tag
+        if self.request.user.is_authenticated:
+            context["is_subscribed_tag"] = TagSubscription.objects.filter(
+                subscriber=self.request.user,
+                tag=tag
+            ).exists()
+        else:
+            context["is_subscribed_tag"] = False
+        return context
 
 
 class GetAllNewsView(BaseArticleListView):
@@ -242,6 +255,16 @@ class ArticleDetailView(BaseMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['comment_form'] = CommentForm()
+
+        # подписка на автора
+        if self.request.user.is_authenticated and self.object.author:
+            context["is_subscribed_author"] = UserSubscription.objects.filter(
+                    subscriber = self.request.user,
+                    author = self.object.author
+            ).exists()
+        else:
+            context["is_subscribed_author"] = False
+
         # Получаем все комментарии для данной статьи
         context['comments'] = self.object.comments.all()
         return context
@@ -264,12 +287,41 @@ class ArticleDetailView(BaseMixin, DetailView):
         return self.render_to_response(context)
 
 
-class MainView(BaseMixin, TemplateView):
-    template_name = 'main.html'
+class MainView(BaseMixin, ListView):
+    """
+    Главная страница `/` – выводит статьи авторов/тегов,
+    на которые подписан текущий пользователь.
+    Если подписок нет — возвращает пустой QuerySet.
+    """
+
+    template_name = "news/catalog.html"
+    paginate_by = 10
+    context_object_name = "articles"
+
+    def get_queryset(self):
+        order_by = self.request.GET.get("order_by", "-publication_date")
+        qs = Article.objects.select_related("category").prefetch_related("tags")
+
+        user = self.request.user
+        if not user.is_authenticated:
+            return qs.none()
+
+        author_ids = user.subscribed_authors.values_list("author_id", flat=True)
+        tag_ids = user.subscribed_tags.values_list("tag_id", flat=True)
+
+        if author_ids or tag_ids:
+            qs = qs.filter(
+                Q(author_id__in=author_ids) | Q(tags__id__in=tag_ids)
+            ).distinct()
+        else:
+            qs = qs.none()
+
+        return qs.order_by(order_by)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user_ip'] = self.request.META.get('REMOTE_ADDR')
+        context["is_feed"] = True          # признак «это лента подписок»
+        context["active_tag"] = None       # чтобы шаблон не путал с тег‑страницей
         return context
 
 
@@ -284,19 +336,11 @@ class GetAllNewsViews(BaseMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        # считаем параметры из GET-запроса
-        sort = self.request.GET.get('sort', 'publication_date')  # по умолчанию сортируем по дате загрузки
-        order = self.request.GET.get('order', 'desc')  # по умолчанию сортируем по убыванию
+        return Article.objects.sorted(
+            sort=self.request.GET.get('sort', 'publication_date'),
+            order=self.request.GET.get('order', 'desc')
+        )
 
-        # Проверяем дали ли мы разрешение на сортировку по этому полю
-        valid_sort_fields = {'publication_date', 'views'}
-        if sort not in valid_sort_fields:
-            sort = 'publication_date'
-
-        # Обрабатываем направление сортировки
-        order_by = f'-{sort}' if order == 'desc' else sort
-
-        return Article.objects.select_related('category').prefetch_related('tags').order_by(order_by)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -400,3 +444,37 @@ class ArticleDeleteView(LoginRequiredMixin, BaseMixin, DeleteView):
         if self.request.user.is_superuser or self.request.user.groups.filter(name="Moderator").exists():
             return qs
         return qs.filter(author=self.request.user)
+
+
+# ------------------  TOGGLE AUTHOR SUBSCRIPTION  -------------------
+
+class ToggleAuthorSubscriptionView(LoginRequiredMixin, View):
+    """
+    POST‑эндпоинт/subscribe/author/<author_id>/.
+    Переключает подписку текущего пользователя на автора.
+    """
+    def post(self, request, author_id, *args, **kwargs):
+        sub, created = UserSubscription.objects.get_or_create(
+            subscriber=request.user,
+            author_id=author_id,
+        )
+        if not created:
+            sub.delete()
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+# ------------------  TOGGLE TAG SUBSCRIPTION  ----------------------
+
+class ToggleTagSubscriptionView(LoginRequiredMixin, View):
+    """
+    POST‑эндпоинт/subscribe/tag/<tag_id>/.
+    Переключает подписку на тег.
+    """
+    def post(self, request, tag_id, *args, **kwargs):
+        sub, created = TagSubscription.objects.get_or_create(
+            subscriber=request.user,
+            tag_id=tag_id,
+        )
+        if not created:
+            sub.delete()
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
