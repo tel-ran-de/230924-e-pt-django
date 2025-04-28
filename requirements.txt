@@ -10,6 +10,7 @@ django-debug-toolbar==5.0.1
 django-extensions==3.2.3
 django-jazzmin==3.0.1
 executing==2.2.0
+gunicorn==23.0.0
 idna==3.10
 ipython==8.31.0
 jedi==0.19.2
