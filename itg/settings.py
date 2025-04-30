@@ -248,8 +248,18 @@ JAZZMIN_UI_TWEAKS = {
     }
 }
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_URL = "/static/"
+MEDIA_URL  = "/media/"
+
+# если запускаемся в Docker — берём корневые пути,
+# иначе (локально без Docker) — подкаталоги проекта
+if os.getenv("DOCKERIZED"):          # переменная окружения, которую задаём в compose
+    STATIC_ROOT = Path("/static")
+    MEDIA_ROOT  = Path("/media")
+else:
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+    MEDIA_ROOT  = BASE_DIR / "media"
+
 
 LOGIN_URL = '/accounts/login/'
 
