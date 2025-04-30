@@ -19,6 +19,20 @@
           {% include "include/form_field.html" with field=field %}
         {% endfor %}
 
+        {% if tone_label or topic_label %}
+            <div class="alert alert-info mt-3">
+                <p><strong>Автоматический анализ текста:</strong></p>
+                <ul class="mb-0">
+                    {% if tone_label %}
+                        <li>Тональность: {{ tone_label }}</li>
+                    {% endif %}
+                    {% if topic_label %}
+                        <li>Тематика: {{ topic_label }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
             <button type="submit" class="btn btn-primary btn-lg">
                 <i class="bi bi-save"></i> Опубликовать

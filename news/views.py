@@ -16,6 +16,7 @@ from django.views.generic.edit import FormView
 from .forms import ArticleForm, ArticleUploadForm, CommentForm
 from .models import Article, ArticleHistory, ArticleHistoryDetail, Category, Favorite, Like, Tag, UserSubscription, TagSubscription
 
+import requests
 import unidecode
 from django.db import models
 from django.utils.text import slugify
@@ -356,11 +357,35 @@ class AddArtilceView(LoginRequiredMixin, BaseMixin, CreateView):
     success_url = reverse_lazy('news:catalog')
 
     def form_valid(self, form):
+        # Заполняем автора и статус, как обычно
         form.instance.author = self.request.user
-        # Если пользователь не модератор и не админ, устанавливаем статус "не проверено"
         if not (self.request.user.is_superuser or self.request.user.groups.filter(name="Moderator").exists()):
-            form.instance.status = 0  # или False, в зависимости от типа поля
-        return super().form_valid(form)
+            form.instance.status = 0
+
+        # Получаем текст
+        text = form.cleaned_data['content']
+        base_url = "http://sentiment-fastapi:8010"
+
+        tone_label = "N/A"
+        topic_label = "N/A"
+
+        try:
+            tone = requests.post(f"{base_url}/predict", json={"text": text}, timeout=5)
+            topic = requests.post(f"{base_url}/topic", json={"text": text}, timeout=5)
+
+            if tone.ok:
+                tone_label = tone.json().get("label", "N/A")
+            if topic.ok:
+                topic_label = topic.json().get("topic", "N/A")
+        except requests.RequestException:
+            tone_label = topic_label = "Ошибка при обращении к FastAPI"
+
+        # Добавляем в контекст для шаблона
+        return self.render_to_response(self.get_context_data(
+            form=form,
+            tone_label=tone_label,
+            topic_label=topic_label
+        ))
 
     def generate_unique_slug(self, title):
         base_slug = slugify(unidecode.unidecode(title))
