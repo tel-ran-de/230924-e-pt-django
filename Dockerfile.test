@@ -1,0 +1,21 @@
+FROM python:3.12
+
+WORKDIR /app
+
+# Системные пакеты
+RUN apt-get update && apt-get install -y \
+        netcat-openbsd gcc libpq-dev && apt-get clean
+
+COPY requirements.txt requirements.txt
+COPY requirements.test.txt requirements.test.txt
+
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install -r requirements.test.txt
+
+COPY . .
+
+# Делаем entrypoint скрипт исполняемым
+RUN chmod +x /app/entrypoint.test.sh
+
+CMD ["/app/entrypoint.test.sh"]

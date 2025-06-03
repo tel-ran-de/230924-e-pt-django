@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # НЕ конфликтуем с основной БД
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: /app/entrypoint.test.sh
+    depends_on:
+      - db
+    environment:
+      POSTGRES_DB: itg_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DJANGO_SETTINGS_MODULE: itg.settings
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8999:8000"  # Можно удалить, если тестам не нужен доступ
+    env_file:
+      - .env.test
+
+volumes:
+  postgres_test_data:

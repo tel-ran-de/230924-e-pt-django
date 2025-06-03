@@ -4629,3 +4629,36 @@ bad_users.delete()           # или присвойте им уникальны
   * `docker-compose exec web pytest -v news/tests` — запуск тестов приложение `news`
 
 **commit: `Эпилог II: добавлены начальные тесты моделей, форм и представлений с настройкой Pytest`**
+
+* **Docker для тестов:**
+
+  * Добавлены образы и окружение для запуска тестов в контейнере:
+
+    * `Dockerfile.test` — специальный образ на Python 3.12 с установкой зависимостей (`requirements.txt` и `requirements.test.txt`) и скриптом запуска.
+    * `docker-compose.test.yml` — отдельный `compose`-файл:
+
+      * Сервис `db` (PostgreSQL 15) с уникальным портом `5433`.
+      * Сервис `web`, использующий `Dockerfile.test`, подключает `.env.test`, монтирует проект и запускает `entrypoint.test.sh`.
+
+* **Конфигурация окружения:**
+
+  * Добавлен `.env.test` с переменными окружения для тестовой БД и Django (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG` и др.).
+
+* **Скрипты запуска:**
+
+  * `entrypoint.test.sh` — исполняемый скрипт:
+
+    * Ожидает доступность БД (через `wait-for-db.sh`).
+    * Выполняет миграции и запускает `pytest`.
+  * `wait-for-db.sh` переписан на POSIX-совместимый `sh`, принимает параметры хоста и порта.
+
+* **Тестовые зависимости:**
+
+  * Зависимости `pytest`, `pytest-django`, `pytest-cov` перенесены из `requirements.txt` в отдельный `requirements.test.txt`, очищенный от основных зависимостей (только тестовые пакеты).
+
+* **Запуск:**
+  * `docker-compose -f docker-compose.test.yml up --build` — запуск тестов
+  * `docker-compose -f docker-compose.test.yml down -v` — остановка контейнеров с тестами и удаление томов
+
+**commit: `Эпилог II: добавлено окружение для тестирования в Docker с отдельными зависимостями и entrypoint-скриптами`**
+

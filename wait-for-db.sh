@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
-# Ждем, пока база данных станет доступна.
-# Предполагается, что заданы переменные окружения PG_HOST и PG_PORT.
-while ! nc -z "$PG_HOST" "$PG_PORT"; do
-  echo "Waiting for database connection at $PG_HOST:$PG_PORT..."
+host="$1"
+port="$2"
+
+echo "Waiting for database at $host:$port..."
+
+while ! nc -z "$host" "$port"; do
   sleep 1
 done
 
