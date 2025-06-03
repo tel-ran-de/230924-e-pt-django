@@ -8,4 +8,4 @@ set -e
 python manage.py migrate
 
 # Запускаем тесты
-pytest
+pytest --cov=. --cov-report=term-missing
